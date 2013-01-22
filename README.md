@@ -10,7 +10,7 @@ Usage
 
 Directly from the console:
 
-	qunit-multi-runner.js tests/testsuite1.html tests/testsuite2.html > qunit-junit.xml
+	phantomjs qunit-multi-runner.js tests/testsuite1.html tests/testsuite2.html > qunit-junit.xml
 
 This will run testsuite1 and testsuite2 and outputs the results to a junit compatible xml.
 
