@@ -342,19 +342,21 @@ TestsRunner.prototype = {
         for (index in this.runs) {
             if (this.runs.hasOwnProperty(index)) {
                 suites = this.runs[index].getQunitResults();
-                for (i = 0; i < suites.length; i += 1) {
-                    suite = suites[i];
+                if (suites) {
+                    for (i = 0; i < suites.length; i += 1) {
+                        suite = suites[i];
 
-                    // Calculate time
-                    for (ti = 0; ti < suite.tests.length; ti += 1) {
-                        test = suite.tests[ti];
-                        test.time = (now.getTime() - new Date(test.start).getTime()) / 1000;
-                        suite.time += test.time;
+                        // Calculate time
+                        for (ti = 0; ti < suite.tests.length; ti += 1) {
+                            test = suite.tests[ti];
+                            test.time = (now.getTime() - new Date(test.start).getTime()) / 1000;
+                            suite.time += test.time;
+                        }
+
+                        globalstats.failures += suite.failures;
+                        globalstats.tests += suite.tests.length;
+                        globalstats.time += Math.round(suite.time * 1000) / 1000;
                     }
-
-                    globalstats.failures += suite.failures;
-                    globalstats.tests += suite.tests.length;
-                    globalstats.time += Math.round(suite.time * 1000) / 1000;
                 }
             }
         }
