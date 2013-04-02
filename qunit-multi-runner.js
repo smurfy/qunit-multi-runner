@@ -262,6 +262,10 @@ TestRun.prototype = {
             return JSON.stringify(window.quinitSuite);
         });
         return JSON.parse(suite);
+    },
+    getUrl: function() {
+        "use strict";
+        return this.url;
     }
 };
 
@@ -338,7 +342,6 @@ TestsRunner.prototype = {
 
         xmlWriter.start('testsuites');
 
-
         for (index in this.runs) {
             if (this.runs.hasOwnProperty(index)) {
                 suites = this.runs[index].getQunitResults();
@@ -373,56 +376,68 @@ TestsRunner.prototype = {
         for (index in this.runs) {
             if (this.runs.hasOwnProperty(index)) {
                 suites = this.runs[index].getQunitResults();
+                if (suites) {
+                    for (i = 0; i < suites.length; i += 1) {
+                        suite = suites[i];
 
-                for (i = 0; i < suites.length; i += 1) {
-                    suite = suites[i];
-
-                    // Calculate time
-                    for (ti = 0; ti < suite.tests.length; ti += 1) {
-                        test = suite.tests[ti];
-                        test.time = (now.getTime() - new Date(test.start).getTime()) / 1000;
-                        suite.time += test.time;
-                    }
-
-                    xmlWriter.start('testsuite', {
-                        name: suite.name,
-                        errors: "0",
-                        failures: suite.failures,
-                        hostname: "localhost",
-                        tests: suite.tests.length,
-                        time: Math.round(suite.time * 1000) / 1000,
-                        timestamp: ISODateString(now)
-                    });
-
-                    for (ti = 0; ti < suite.tests.length; ti += 1) {
-                        test = suite.tests[ti];
-
-                        xmlWriter.start('testcase', {
-                            name: test.name,
-                            total: test.total,
-                            failed: test.failed,
-                            time: Math.round(test.time * 1000) / 1000
-                        });
-
-                        for (fi = 0; fi < test.failures.length; fi += 1) {
-                            xmlWriter.start('failure', {type: "AssertionFailedError", message: test.failures[fi]}, true);
+                        // Calculate time
+                        for (ti = 0; ti < suite.tests.length; ti += 1) {
+                            test = suite.tests[ti];
+                            test.time = (now.getTime() - new Date(test.start).getTime()) / 1000;
+                            suite.time += test.time;
                         }
 
-                        xmlWriter.end('testcase');
-                    }
+                        xmlWriter.start('testsuite', {
+                            name: suite.name,
+                            errors: "0",
+                            failures: suite.failures,
+                            hostname: "localhost",
+                            tests: suite.tests.length,
+                            time: Math.round(suite.time * 1000) / 1000,
+                            timestamp: ISODateString(now)
+                        });
 
-                    if (suite.stdout) {
-                        xmlWriter.start('system-out');
-                        xmlWriter.cdata('\n' + suite.stdout);
-                        xmlWriter.end('system-out');
-                    }
+                        for (ti = 0; ti < suite.tests.length; ti += 1) {
+                            test = suite.tests[ti];
 
-                    if (suite.stderr) {
-                        xmlWriter.start('system-err');
-                        xmlWriter.cdata('\n' + suite.stderr);
-                        xmlWriter.end('system-err');
-                    }
+                            xmlWriter.start('testcase', {
+                                name: test.name,
+                                total: test.total,
+                                failed: test.failed,
+                                time: Math.round(test.time * 1000) / 1000
+                            });
 
+                            for (fi = 0; fi < test.failures.length; fi += 1) {
+                                xmlWriter.start('failure', {type: "AssertionFailedError", message: test.failures[fi]}, true);
+                            }
+
+                            xmlWriter.end('testcase');
+                        }
+
+                        if (suite.stdout) {
+                            xmlWriter.start('system-out');
+                            xmlWriter.cdata('\n' + suite.stdout);
+                            xmlWriter.end('system-out');
+                        }
+
+                        if (suite.stderr) {
+                            xmlWriter.start('system-err');
+                            xmlWriter.cdata('\n' + suite.stderr);
+                            xmlWriter.end('system-err');
+                        }
+
+                        xmlWriter.end('testsuite');
+                    }
+                } else {
+                    xmlWriter.start('testsuite', {
+                        name: 'run: ' + this.runs[index].getUrl(),
+                        errors: "1",
+                        failures: "1",
+                        hostname: "localhost",
+                        tests: 0,
+                        time: 0,
+                        timestamp: ISODateString(now)
+                    });
                     xmlWriter.end('testsuite');
                 }
             }
@@ -434,8 +449,6 @@ TestsRunner.prototype = {
         console.log(xmlWriter.getString());
     }
 };
-
-
 
 var tr = new TestsRunner(phantom.args);
 tr.run();
